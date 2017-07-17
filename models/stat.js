@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 // schema
 
 var statSchema = mongoose.Schema({
-	activity: {
+	activityId: {
 		type: String,
 		required: true
 	},
@@ -20,6 +20,11 @@ var statSchema = mongoose.Schema({
 
 var Stat = mongoose.model('Stat', statSchema);
 
+//get stats by activity id?
+const getStatByActId = function(id, callback){
+	Stat.findOne({'activity':id}, callback);
+}
+
 //add stats
 const addStat = function(newstat, callback){
 	Stat.create(newstat, callback);
@@ -34,5 +39,6 @@ const deleteStat = function(id, callback){
 module.exports = {
 	Stat: Stat,
 	addStat: addStat,
-	deleteStat : deleteStat
+	deleteStat : deleteStat,
+	getStatByActId : getStatByActId
 }

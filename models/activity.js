@@ -14,8 +14,7 @@ var activitySchema = mongoose.Schema({
 });
 
 var Activity = mongoose.model('Activity', activitySchema);
-
-// get activities
+// get  all activities
 
 const getActivities = function(callback, limit){
 	Activity.find(callback).limit(limit);

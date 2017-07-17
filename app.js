@@ -1,19 +1,50 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const passport = require('passport');
+const bcryptjs = require('bcryptjs');
+const BasicStrategy = require('passport-http').BasicStrategy;
 const mongoose = require("mongoose");
 const app = express();
+const mustacheExpress = require('mustache-express');
 Activity = require('./models/activity');
 Stat = require('./models/stat');
 
+//or is it app.use(express.static('./public')) ??
+app.engine('mustache', mustacheExpress());
+app.set('view engine', 'mustache');
+app.set('views', './views');
+app.use(express.static('public'));
+
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
 
 //Connect to mongoose
 mongoose.connect("mongodb://localhost/stattracker");
 var db = mongoose.connection;
 
+const users = {
+    'zack': 'test'
+};
+
+passport.use(new BasicStrategy(
+  function(username, password, done) {
+      const userPassword = users[username];
+      if (!userPassword) { return done(null, false); }
+      if (userPassword !== password) { return done(null, false); }
+      return done(null, username);
+  }
+));
+
 app.get("/", function(req, res) {
-  res.send("Home page... ");
+  res.render('index');
 });
+
+app.get('/api/hello',
+    passport.authenticate('basic', {session: false}),
+    function (req, res) {
+        res.json({"hello": req.user})
+    }
+);
 
 //get all activities
 app.get("/api/activities", function  (req, res) {
@@ -21,28 +52,50 @@ app.get("/api/activities", function  (req, res) {
 		if(err){
 			console.log(err);
 		};
-		res.send(activities)
+		res.render('activities',{activities:activities})
 	})
 });
 
 //get activity by id
+// app.get("/api/activities/:id", function  (req, res) {
+// 	Activity.getActivityById(req.params.id, function(err, activity){
+// 		if(err){
+// 			console.log(err);
+// 		};
+// 		res.render('activity',{activity:activity})
+// 	})
+// });
+
 app.get("/api/activities/:id", function  (req, res) {
-	Activity.getActivityById(req.params.id, function(err, activity){
+	// let activityname = Activity.getActivityById(req.params.id, function(err, activity){
+	// 	if(err){
+	// 		console.log(err);
+	// 	}
+	// });
+	Stat.getStatByActId(req.params.id,
+	function(err, stat){
 		if(err){
 			console.log(err);
 		};
-		res.send(activity)
-	})
+	res.render('activity',
+	// {activity:activityname},
+	{stat:stat})
+	});
+
 });
+
+
 
 //add activity
 app.post("/api/activities", function  (req, res) {
-	var activity = req.body;
+	console.log("newactivity="+req.body.newactivity);
+	let activity = {}
+	activity.name = req.body.newactivity;
 	Activity.addActivity(activity, function(err, activity){
 		if(err){
 			console.log(err);
 		};
-		res.send(activity)
+		res.redirect("/api/activities")
 	})
 });
 
@@ -58,26 +111,27 @@ app.put("/api/activities/:id", function(req, res) {
 	})
 });
 
+app.post('/api/activities/{{id}}/delete', function (req, res) {
+	res.redirect()
+}
+
 //delete activity
-app.delete("/api/activities/:id", function  (req, res) {
+xhttp.delete("/api/activities/:id", function  (req, res) {
 	var id = req.params.id
 	Activity.deleteActivity(id, function(err, activity){
 		if(err){
 			console.log(err);
 		};
-		res.send(activity)
+		res.redirect("/api/activities")
 	})
 });
 
 //add stats to activity ///IN PROGRESS
 app.post("/api/activities/:id/stats", function  (req, res) {
-	var iD = req.params.id;
+	var id = req.params.id;
 	var amount = req.body.amount;
-	console.log(iD)
-	var newstat = {"activity": iD,
+	var newstat = {"activity": id,
 		"amount": req.body.amount}
-	console.log("newstat amount="+newstat.amount);
-		console.log("newstat id="+newstat.activity);
 	Stat.addStat(newstat, function(err, stat){
 		if(err){
 			console.log(err);

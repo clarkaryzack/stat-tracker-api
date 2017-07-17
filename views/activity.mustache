@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Stat Tracker</title>
+	</head>
+	<body>
+
+		<h1>Selected Activity:</h1>
+		<a href="/api/activities">BACK</a>
+		<br>
+		{{#stat}}
+			<a href='/api/activities/{{id}}'>{{activity}}</a>
+			<a href='/api/activities/{{id}}'>{{amount}}</a>
+			<br>
+			<a href='/api/activities/{{id}}'>{{create_date}}</a>
+			<br>
+		{{/stat}}
+
+
+		<form>
+		</form>
+
+	</body>
+</html>
