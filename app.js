@@ -1,13 +1,14 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const passport = require('passport');
-const bcryptjs = require('bcryptjs');
+const bcrypt = require('bcryptjs');
 const BasicStrategy = require('passport-http').BasicStrategy;
 const mongoose = require("mongoose");
 const app = express();
 const mustacheExpress = require('mustache-express');
 Activity = require('./models/activity');
 Stat = require('./models/stat');
+User = require('./models/user');
 
 //or is it app.use(express.static('./public')) ??
 app.engine('mustache', mustacheExpress());
@@ -22,24 +23,32 @@ app.use(bodyParser.urlencoded({ extended: false }));
 mongoose.connect("mongodb://localhost/stattracker");
 var db = mongoose.connection;
 
-const users = {
-    'zack': 'test'
-};
+var user = User.findOne({name:"Zack"},
+function(err, user){
+	user.password = 'test';
+	user.save(function(err){
+		if (err) {return console.log('user not found')}
+		console.log("user saved!")
+	})
+});
 
-passport.use(new BasicStrategy(
-  function(username, password, done) {
-      const userPassword = users[username];
-      if (!userPassword) { return done(null, false); }
-      if (userPassword !== password) { return done(null, false); }
-      return done(null, username);
-  }
-));
+passport.use(
+	new BasicStrategy(function(username, password, done) {
+		User.findOne({name:username}, function(err, user){
+			console.log("user check");
+			if (user && bcrypt.compareSync(password, user.password)) {
+				return done(null, user);
+			}
+			return done (null, false);
+		});
+	})
+);
 
 app.get("/", function(req, res) {
   res.render('index');
 });
 
-app.get('/api/hello',
+app.get('/api/auth',
     passport.authenticate('basic', {session: false}),
     function (req, res) {
         res.json({"hello": req.user})
@@ -56,34 +65,18 @@ app.get("/api/activities", function  (req, res) {
 	})
 });
 
-//get activity by id
-// app.get("/api/activities/:id", function  (req, res) {
-// 	Activity.getActivityById(req.params.id, function(err, activity){
-// 		if(err){
-// 			console.log(err);
-// 		};
-// 		res.render('activity',{activity:activity})
-// 	})
-// });
-
+//get stats for a single activity
 app.get("/api/activities/:id", function  (req, res) {
-	// let activityname = Activity.getActivityById(req.params.id, function(err, activity){
-	// 	if(err){
-	// 		console.log(err);
-	// 	}
-	// });
-	Stat.getStatByActId(req.params.id,
-	function(err, stat){
-		if(err){
-			console.log(err);
-		};
-	res.render('activity',
-	// {activity:activityname},
-	{stat:stat})
-	});
+	 const activity = Activity.getActivityById(req.params.id, function(err, activity){
+			if(err){
+				console.log(err);
+			}
 
-});
+	res.render('activity',{activity:activity})
 
+})
+
+})
 
 
 //add activity
@@ -111,13 +104,9 @@ app.put("/api/activities/:id", function(req, res) {
 	})
 });
 
-app.post('/api/activities/{{id}}/delete', function (req, res) {
-	res.redirect()
-}
-
-//delete activity
-xhttp.delete("/api/activities/:id", function  (req, res) {
-	var id = req.params.id
+//This is a duplicate of the delete route below, because I don't know how to delete using http (I think that it is impossible, maybe?), and it is very late.
+app.post('/api/activities/:id/delete', function (req, res) {
+	var id = req.params.id;
 	Activity.deleteActivity(id, function(err, activity){
 		if(err){
 			console.log(err);
@@ -126,17 +115,28 @@ xhttp.delete("/api/activities/:id", function  (req, res) {
 	})
 });
 
-//add stats to activity ///IN PROGRESS
+//delete activity
+app.delete("/api/activities/:id", function  (req, res) {
+	var id = req.params.id;
+	Activity.deleteActivity(id, function(err, activity){
+		if(err){
+			console.log(err);
+		};
+		res.redirect("/api/activities")
+	})
+});
+
+//add stats to activity
 app.post("/api/activities/:id/stats", function  (req, res) {
 	var id = req.params.id;
-	var amount = req.body.amount;
+	var amount = req.body.newstat;
 	var newstat = {"activity": id,
-		"amount": req.body.amount}
+		"amount": req.body.newstat}
 	Stat.addStat(newstat, function(err, stat){
 		if(err){
 			console.log(err);
 		};
-		res.send(newstat)
+		res.redirect("/api/activities/"+req.params.id)
 	})
 });
 

@@ -9,17 +9,14 @@
 		<h1>Selected Activity:</h1>
 		<a href="/api/activities">BACK</a>
 		<br>
-		{{#stat}}
-			<a href='/api/activities/{{id}}'>{{activity}}</a>
-			<a href='/api/activities/{{id}}'>{{amount}}</a>
+		{{#activity}}
+			{{_id}}
 			<br>
-			<a href='/api/activities/{{id}}'>{{create_date}}</a>
+			{{name}}
 			<br>
-		{{/stat}}
-
-
-		<form>
-		</form>
-
+			{{create_date}}
+			<br>
+			<br>
+		{{/activity}}
 	</body>
 </html>

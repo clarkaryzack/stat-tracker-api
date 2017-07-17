@@ -22,7 +22,7 @@ var Stat = mongoose.model('Stat', statSchema);
 
 //get stats by activity id?
 const getStatByActId = function(id, callback){
-	Stat.findOne({'activity':id}, callback);
+	Stat.findOne({'activityId':id}, callback);
 }
 
 //add stats

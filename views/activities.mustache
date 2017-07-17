@@ -8,8 +8,8 @@
 
 		<h1>Activities Being Tracked:</h1>
 		{{#activities}}
+		<form action="/api/activities/{{id}}/delete" method="post">
 			<a href='/api/activities/{{id}}'>{{name}}</a>
-			<form action="/api/activities/{{id}}/delete" method="post">
 				<input type="submit" name="" value="Delete">
 			</form>
 			<br>

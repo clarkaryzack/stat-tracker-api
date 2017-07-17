@@ -3,6 +3,9 @@ const mongoose = require('mongoose');
 // schema
 
 var activitySchema = mongoose.Schema({
+	userId: {
+		type: String,
+	},
 	name:{
 		type: String,
 		required: true
